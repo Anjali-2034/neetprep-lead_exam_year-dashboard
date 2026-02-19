@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Executive Analytics — Lead Exam 2027</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #f8fafc;
+    }
+
+    .glass-card {
+      background: white;
+      border-radius: 18px;
+      border: 1px solid #e5e7eb;
+      padding: 32px;
+    }
+
+    .stat-value {
+      letter-spacing: -0.03em;
+    }
+
+    .sidebar-item {
+      padding: 10px 14px;
+      font-size: 14px;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      color: #334155;
+      position: relative;
+    }
+
+    .sidebar-item:hover {
+      background: #f1f5f9;
+    }
+
+    .sidebar-item.active {
+      background: #eef2ff;
+      color: #3730a3;
+    }
+
+    .sidebar-item.active::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 8px;
+      bottom: 8px;
+      width: 3px;
+      background: #6366f1;
+      border-radius: 2px;
+    }
+  </style>
+</head>
+
+<body class="min-h-screen">
+
+<!-- Top Bar -->
+<nav class="sticky top-0 z-50 bg-white border-b border-slate-200 px-8 py-4">
+  <div class="max-w-7xl mx-auto flex justify-between items-center">
+    <h1 class="text-xl font-extrabold text-slate-900">
+      EXECUTIVE <span class="text-indigo-600">ANALYTICS</span>
+    </h1>
+
+    <div class="flex items-center gap-3 bg-slate-100 p-2 rounded-xl">
+      <input type="date" id="startDate" class="bg-transparent text-sm font-bold outline-none">
+      <span class="text-slate-400">→</span>
+      <input type="date" id="endDate" class="bg-transparent text-sm font-bold outline-none">
+      <button id="filterBtn"
+        onclick="fetchData()"
+        class="bg-slate-900 text-white px-5 py-2 rounded-lg text-sm font-bold">
+        Sync Data
+      </button>
+    </div>
+  </div>
+</nav>
+
+<div class="max-w-7xl mx-auto px-8 py-10 flex gap-10">
+
+  <!-- Sidebar -->
+  <aside class="w-64 border-r border-slate-200 pr-6">
+
+    <!-- 2027 -->
+<div class="flex justify-between items-center cursor-pointer mb-4"
+     onclick="toggleYearPanel('2027')">
+  <span class="text-xs font-black text-slate-500 uppercase tracking-widest">
+    2027+
+  </span>
+  <span id="chevron-2027" class="text-slate-400 text-sm">▾</span>
+</div>
+
+<div id="yearPanel-2027" class="hidden space-y-1 mb-6">
+  <div class="sidebar-item active" onclick="setSegment(2027, null, this)">ALL</div>
+  <div class="sidebar-item" onclick="setSegment(2027, 'organic', this)">ORGANIC</div>
+  <div class="sidebar-item" onclick="setSegment(2027, 'paid', this)">PAID</div>
+  <div class="sidebar-item" onclick="setSegment(2027, 'content', this)">CONTENT</div>
+  <div class="sidebar-item" onclick="setSegment(2027, 'others', this)">OTHERS</div>
+</div>
+
+<!-- 2028 -->
+<div class="flex justify-between items-center cursor-pointer mb-4"
+     onclick="toggleYearPanel('2028')">
+  <span class="text-xs font-black text-slate-500 uppercase tracking-widest">
+    2028+
+  </span>
+  <span id="chevron-2028" class="text-slate-400 text-sm">▾</span>
+</div>
+
+<div id="yearPanel-2028" class="hidden space-y-1">
+  <div class="sidebar-item" onclick="setSegment(2028, null, this)">ALL</div>
+  <div class="sidebar-item" onclick="setSegment(2028, 'organic', this)">ORGANIC</div>
+  <div class="sidebar-item" onclick="setSegment(2028, 'paid', this)">PAID</div>
+  <div class="sidebar-item" onclick="setSegment(2028, 'content', this)">CONTENT</div>
+  <div class="sidebar-item" onclick="setSegment(2028, 'others', this)">OTHERS</div>
+</div>
+
+<!-- OVERALL -->
+<div class="flex justify-between items-center cursor-pointer mb-4"
+     onclick="toggleYearPanel('overall')">
+  <span class="text-xs font-black text-slate-500 uppercase tracking-widest">
+    OVERALL
+  </span>
+  <span id="chevron-overall" class="text-slate-400 text-sm">▾</span>
+</div>
+
+<div id="yearPanel-overall" class="hidden space-y-1">
+  <div class="sidebar-item" onclick="setSegment('overall', null, this)">ALL</div>
+  <div class="sidebar-item" onclick="setSegment('overall', 'organic', this)">ORGANIC</div>
+  <div class="sidebar-item" onclick="setSegment('overall', 'paid', this)">PAID</div>
+  <div class="sidebar-item" onclick="setSegment('overall', 'content', this)">CONTENT</div>
+  <div class="sidebar-item" onclick="setSegment('overall', 'others', this)">OTHERS</div>
+</div>
+
+
+  </aside>
+
+  <!-- Main -->
+  <main class="flex-1">
+
+    <div class="mb-10">
+      <h2 class="text-4xl font-black text-slate-900 mb-2">
+        Performance Overview
+      </h2>
+      <p class="text-slate-500 font-medium">
+        Internal Property:
+        <span class="text-indigo-600 font-bold">
+          lead_exam_year
+        </span>
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+
+      <div class="glass-card border-t-4 border-indigo-500">
+        <span class="text-xs font-bold text-slate-400 uppercase">Total Leads</span>
+        <div id="leads" class="stat-value text-5xl font-black mt-4">0</div>
+      </div>
+
+      <div class="glass-card border-t-4 border-slate-400">
+        <span class="text-xs font-bold text-slate-400 uppercase">Calls Connected</span>
+        <div id="calls" class="stat-value text-5xl font-black mt-4">0</div>
+      </div>
+
+      <div class="glass-card border-t-4 border-amber-500">
+        <span class="text-xs font-bold text-slate-400 uppercase">MQLs</span>
+        <div id="mqls" class="stat-value text-5xl font-black mt-4">0</div>
+      </div>
+
+      <div class="glass-card border-t-4 border-blue-500">
+        <span class="text-xs font-bold text-slate-400 uppercase">Opportunities</span>
+        <div id="opps" class="stat-value text-5xl font-black mt-4">0</div>
+      </div>
+
+      <div class="glass-card border-t-4 border-slate-800">
+        <span class="text-xs font-bold text-slate-400 uppercase">Customers</span>
+        <div id="customers" class="stat-value text-5xl font-black mt-4">0</div>
+      </div>
+
+      <div class="glass-card border-t-4 border-emerald-500 bg-emerald-50">
+        <span class="text-xs font-bold text-emerald-600 uppercase">
+          Conversion Rate
+        </span>
+        <div id="conversion"
+             class="stat-value text-5xl font-black text-emerald-600 mt-4">
+          0.00%
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script>
+let activeSegment = null;
+let activeExamYear = 2027; 
+let isExpanded = false;
+let isFetching = false;
+
+
+function toggleYearPanel(year) {
+  const panel = document.getElementById(`yearPanel-${year}`);
+  const chevron = document.getElementById(`chevron-${year}`);
+  const isHidden = panel.classList.contains('hidden');
+
+  panel.classList.toggle('hidden', !isHidden);
+  chevron.textContent = isHidden ? '▴' : '▾';
+}
+
+
+function setSegment(year, segment, el) {
+  if (isFetching) return;
+
+  activeExamYear = year;
+  activeSegment = segment;
+
+  document.querySelectorAll('.sidebar-item')
+    .forEach(i => i.classList.remove('active'));
+
+  el.classList.add('active');
+  fetchData();
+}
+
+async function fetchData() {
+  if (isFetching) return;
+
+  const s = document.getElementById('startDate').value;
+  const e = document.getElementById('endDate').value;
+  if (!s || !e) return;
+
+  isFetching = true;
+
+  const btn = document.getElementById('filterBtn');
+  btn.textContent = 'Syncing…';
+  btn.disabled = true;
+
+  try {
+
+    const startMs = new Date(s + "T00:00:00").getTime();
+    const endMs = new Date(e + "T23:59:59").getTime();
+
+    const res = await fetch('http://localhost:3001/api/dashboard', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        start: startMs,
+        end: endMs,
+        segment: activeSegment,
+        examYear: activeExamYear
+      })
+
+    });
+
+    if (!res.ok) throw new Error('Backend error');
+
+    const d = await res.json();
+
+    document.getElementById('leads').textContent = d.totalLeads ?? 0;
+    document.getElementById('calls').textContent = d.callsConnected ?? 0;
+    document.getElementById('mqls').textContent = d.totalMqls ?? 0;
+    document.getElementById('opps').textContent = d.totalOpps ?? 0;
+    document.getElementById('customers').textContent = d.totalCustomers ?? 0;
+    document.getElementById('conversion').textContent = d.conversionRate ?? '0.00%';
+
+  } catch (err) {
+    console.error('Dashboard error:', err);
+  } finally {
+    btn.textContent = 'Sync Data';
+    btn.disabled = false;
+    isFetching = false;
+  }
+}
+
+window.onload = () => {
+  const today = new Date();
+  const past = new Date();
+  past.setDate(today.getDate() - 30);
+
+  document.getElementById('startDate').valueAsDate = past;
+  document.getElementById('endDate').valueAsDate = today;
+
+  fetchData();
+};
+</script>
+
+</body>
+</html>
